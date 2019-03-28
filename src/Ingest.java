@@ -56,19 +56,21 @@ public class Ingest {
                 Properties properties;
 
                 // load a properties file
-                try (InputStream input = new FileInputStream("Assignment 1/resources/derbyConfig.properties")) {
+                try (InputStream input = new FileInputStream("../resources/derbyConfig.properties")) {
                     properties = new Properties();
                     properties.load(input);
                 } catch (IOException e) {
                     throw new DatabaseException("Could not load in Derby properties - " + e);
                 }
 
-                String driver = "org.apache.derby.jdbc.EmbeddedDriver";
-                try {
-                    Class.forName(driver).newInstance();
-                } catch (Exception e) {
-                    throw new DatabaseException("Could not create derby driver - " + e);
-                }
+//                String driver = "org.apache.derby.jdbc.EmbeddedDriver";
+//                try {
+//                    Class.forName(driver);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    throw new DatabaseException("Could not create derby driver - " + e);
+//                }
+                Runtime.getRuntime().exec("java org.apache.derby.tools.ij");
 
                 DerbyDB derby = new DerbyDB("connect '" + properties.getProperty("protocol") +
                         properties.getProperty("dbName") + "';");
@@ -93,6 +95,8 @@ public class Ingest {
 //        }
         catch (DatabaseException e) {
             System.out.println("ERROR: " + e);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
