@@ -1,0 +1,3 @@
+create table ParkingTime(device_id      integer   not null,arrival_time   timestamp not null,departure_time timestamp,duration       bigint,in_violation   boolean,street_marker  varchar(35) references ParkingBay (street_marker),primary key (device_id, arrival_time));
+create table ParkingBay(street_marker  varchar(6) primary key,sign_details   varchar(30),street_id      integer,side_of_street integer,street_name    varchar(35) references Street (street_name));
+create table Street(street_name      varchar(35) primary key,between_street_1 varchar(35),between_street_2 varchar(35),area             varchar(20));
