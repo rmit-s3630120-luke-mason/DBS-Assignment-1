@@ -1,5 +1,7 @@
 package ingestion;
 
+import org.json.simple.JSONObject;
+
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -37,11 +39,19 @@ public class DataSplitter {
      * @param args [filename to split, amount of data lines to read]
      */
     public static void main(String[] args) {
+
+        // Check if the correct amount of arguments have been passed in.
+        if (args.length != 3) {
+            System.out.println("Not enough arguments. DataSplitter [mongo/derby] [Data File Path] [record amount]");
+            return;
+        }
+
+
         int records;
         File dataFile;
 
         // Get the data file
-        dataFile = new File(args[0]);
+        dataFile = new File(args[1]);
         if (!dataFile.exists()) {
             System.out.println("File does not exist - " + dataFile.getAbsolutePath());
             return;
@@ -49,7 +59,7 @@ public class DataSplitter {
 
         // Get the record amount
         try {
-            records = Integer.parseInt(args[1]);
+            records = Integer.parseInt(args[2]);
         } catch (NumberFormatException e) {
             System.out.println("Could not parse the amount: " + args[1] + " into a number");
             return;
@@ -58,9 +68,7 @@ public class DataSplitter {
         try {
             // Extract data for derby or mongo formatting.
             if (args[0].equalsIgnoreCase(ConfigProvider.DERBY)) {
-
-                    createDerbyData(dataFile, records);
-
+                createDerbyData(dataFile, records);
             } else if (args[0].equalsIgnoreCase(ConfigProvider.MONGO)) {
                 createMongoDbData(dataFile, records);
             } else {
@@ -116,7 +124,7 @@ public class DataSplitter {
      */
     private static void createMongoDbData (File dataFile, int records) throws DatabaseException {
         Properties properties = getConfigProvider().getPropertyFile(ConfigProvider.MONGO_CONFIG);
-        Map<String, Street> valuesMap = new HashMap<>();
+        Map<String, Map<String, Object>> valuesMap = new HashMap<>();
 
         // Create the jsonFile to write to.
         try {
@@ -126,32 +134,43 @@ public class DataSplitter {
 
             // Creates the Json File if it does note exist.
             // Used to write contents to the file.
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileDestination, false));
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileDestination, false))) {
 
-            // Read each record and write the record to the json file
-            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(dataFile))) {
+                // Read each record and write the record to the json file
+                try (BufferedReader bufferedReader = new BufferedReader(new FileReader(dataFile))) {
 
-                // Skip over the header line
-                bufferedReader.readLine();
+                    // Skip over the header line
+                    bufferedReader.readLine();
 
-                // split each line
-                for (int i = 0; i < records; i++) {
-                    String line = bufferedReader.readLine();
-                    if (line == null) {
-                        System.out.println("End of file reached, can't read anymore lines. Line reached = " + i);
-                        break;
-                    }
+                    // split each line
+                    for (int i = 0; i < records; i++) {
+                        String line = bufferedReader.readLine();
+                        if (line == null) {
+                            System.out.println("End of file reached, can't read anymore lines. Line reached = " + i);
+                            break;
+                        }
 
-                    String[] values = line.split(",");
-                    if (values.length == FIELDS.values().length) { // TODO get rid of this magic number
-                        writeMongoValues(values, valuesMap);
-                    } else {
-                        System.out.println(Arrays.toString(values) + " - was not included");
+                        String[] values = line.split(",");
+                        if (values.length == FIELDS.values().length) { // TODO get rid of this magic number
+                            writeMongoValues(values, valuesMap);
+                            if (i % 1000 == 0) {
+                                System.out.println("Lines Written: " + i);
+                            }
+                        } else {
+                            System.out.println(Arrays.toString(values) + " - was not included");
+                        }
                     }
                 }
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.putAll(valuesMap);
+
+                try {
+                    bufferedWriter.write(jsonObject.toJSONString());
+                } catch (IOException e) {
+                    throw new DatabaseException("Couldn't write json to file");
+                }
             }
-
-
         } catch (IOException e) {
             throw new DatabaseException("Could not create the json file - " + e);
         }
@@ -167,7 +186,7 @@ public class DataSplitter {
      * @param f3
      * @throws IOException The file could not be read from.
      */
-    private static void split (File file,int records, FileWriter f1, FileWriter f2, FileWriter f3)
+    private static void split (File file, int records, FileWriter f1, FileWriter f2, FileWriter f3)
         throws IOException {
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
 
@@ -183,8 +202,14 @@ public class DataSplitter {
                 }
 
                 String[] values = line.split(",");
-                if (values.length == FIELDS.values().length) { // TODO get rid of this magic number
+                if (values.length == FIELDS.values().length) {
                     writeDerbyValues(values, f1, f2, f3);
+                    if (i % 1000 == 0) {
+                        System.out.println("Lines Written: " + i);
+                        f1.flush();
+                        f2.flush();
+                        f3.flush();
+                    }
                 } else {
                     System.out.println(Arrays.toString(values) + " - was not included");
                 }
@@ -192,14 +217,70 @@ public class DataSplitter {
         }
     }
 
-    private static void writeMongoValues(String[] values, Map<String, Street> map) {
-        String streetPK = values[FIELDS.STREET_NAME.ordinal()];
+    /**
+     *
+     *
+     * @param values
+     * @param map
+     */
+    private static void writeMongoValues(String[] values, Map<String, Map<String, Object>> map) throws DatabaseException {
+        String parkingTimesKey = "parkingTimes";
+        String parkingBaysKey = "parkingBays";
 
-        if (map.containsKey(streetPK)) {
-            Street street = map.get(streetPK);
-        } else {
-            map.put(streetPK, );
+        String streetPK = values[FIELDS.STREET_NAME.ordinal()];
+        String parkingBayPK = values[FIELDS.STREET_MARKER.ordinal()];
+
+        if (!map.containsKey(streetPK)) {
+            String betweenStreet1 = values[FIELDS.BETWEEN_STREET_1.ordinal()];
+            String betweenStreet2 = values[FIELDS.BETWEEN_STREET_2.ordinal()];
+            String area = values[FIELDS.AREA.ordinal()];
+
+            Map<String, Object> street = new HashMap<>();
+            street.put("betweenStreet1", betweenStreet1);
+            street.put("betweenStreet2", betweenStreet2);
+            street.put("area", area);
+            street.put(parkingBaysKey, new HashMap<String, Object>());
+
+            map.put(streetPK, street);
         }
+
+        Map<String, Object> street =  map.get(streetPK);
+        Map<String, Object> parkingBays = (Map<String, Object>) street.get(parkingBaysKey);
+
+        if (!parkingBays.containsKey(parkingBayPK)) {
+            String signDetails = values[FIELDS.SIGN.ordinal()];
+            int streetId = Integer.parseInt(values[FIELDS.STREET_ID.ordinal()]);
+            int sideOfStreet = Integer.parseInt(values[FIELDS.SIDE_OF_STREET.ordinal()]);
+
+            Map<String, Object> parkingBay = new HashMap<>();
+            parkingBay.put("signDetails", signDetails);
+            parkingBay.put("streetId", streetId);
+            parkingBay.put("sideOfStreet", sideOfStreet);
+            parkingBay.put(parkingTimesKey, new ArrayList<Map<String, Object>>());
+
+            parkingBays.put(parkingBayPK, parkingBay);
+        }
+
+        Map<String, Object> parkingBay = (Map<String, Object>) parkingBays.get(parkingBayPK);
+        List<Map<String, Object>> parkingTimes = (List<Map<String, Object>>) parkingBay.get(parkingTimesKey);
+
+        // Since all parking times are unique we just keep appending parking
+        // times to list knowing there wont be duplicates and therefore don't
+        // need to check for duplicates
+        int deviceId = Integer.parseInt(values[FIELDS.DEVICE_ID.ordinal()]);
+        String arrivalTime = values[FIELDS.ARRIVAL_TIME.ordinal()];
+        String departureTime = values[FIELDS.DEPARTURE_TIME.ordinal()];
+        long duration = Long.parseLong(values[FIELDS.DURATION_SECONDS.ordinal()]);
+        boolean inViolation = Boolean.parseBoolean(values[FIELDS.IN_VIOLATION.ordinal()]);
+
+        Map<String, Object> parkingTimeMap = new HashMap<>();
+        parkingTimeMap.put("deviceId", deviceId);
+        parkingTimeMap.put("arrivalTime", arrivalTime);
+        parkingTimeMap.put("departureTime", departureTime);
+        parkingTimeMap.put("duration", duration);
+        parkingTimeMap.put("inViolation", inViolation);
+
+        parkingTimes.add(parkingTimeMap);
     }
 
     /**
@@ -221,11 +302,8 @@ public class DataSplitter {
                         values[FIELDS.IN_VIOLATION.ordinal()] + "," +
                         values[FIELDS.STREET_MARKER.ordinal()] + "\n";
 
-        String parkingTimePK = values[FIELDS.DEVICE_ID.ordinal()] + "-" + arrivalTime;
-        if (!mappedValues.get(PARKING_TIME).contains(parkingTimePK)) {
-            mappedValues.get(PARKING_TIME).add(parkingTimePK);
-            f1.write(parkingTimeRecord);
-        }
+        f1.write(parkingTimeRecord);
+
 
         String parkingBayRecord =
                 values[FIELDS.STREET_MARKER.ordinal()] + "," +
@@ -255,53 +333,5 @@ public class DataSplitter {
         Date lol = new Date(dateStr);
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         return dateFormatter.format(lol);
-    }
-}
-
-class Street {
-    public String streetName;
-    public String betweenStreet1;
-    public String betweenStreet2;
-    public String area;
-    public Map<String, ParkingBay> parkingBays;
-
-    Street(String streetName, String betweenStreet1, String betweenStreet2, String area) {
-        this.streetName = streetName;
-        this.betweenStreet1 = betweenStreet1;
-        this.betweenStreet2 = betweenStreet2;
-        this.area = area;
-        this.parkingBays = new HashMap<>();
-    }
-}
-
-class ParkingBay {
-    public String streetMarker;
-    public String signDetails;
-    public int streetId;
-    public int sideOfStreet;
-    public Map<String, ParkingTime> parkingTimes;
-
-    ParkingBay(String streetMarker, String signDetails, int streetId, int sideOfStreet) {
-        this.streetMarker = streetMarker;
-        this.signDetails = signDetails;
-        this.streetId = streetId;
-        this.sideOfStreet = sideOfStreet;
-        this.parkingTimes = new HashMap<>();
-    }
-}
-
-class ParkingTime {
-    public int deviceId;
-    public String arrivalTime;
-    public String departureTime;
-    public int duration;
-    public boolean inViolation;
-
-    ParkingTime(int deviceId, String arrivalTime, String departureTime, int duration, boolean inViolation) {
-        this.deviceId = deviceId;
-        this.arrivalTime = arrivalTime;
-        this.departureTime = departureTime;
-        this.duration = duration;
-        this.inViolation = inViolation;
     }
 }
