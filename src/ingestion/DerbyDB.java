@@ -1,21 +1,27 @@
 package ingestion;
 
 import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+import static ingestion.ConfigProvider.getConfigProvider;
+
 /**
  *
  */
-class DerbyDB extends Database {
+class DerbyDB {
+    private Connection connection;
+
     private static final int SQL_STATEMENT_COUNT = 3;
 
     /**
      * Constructor that loads in the embedded derby driver.
      */
     DerbyDB(String url, String driver) throws DatabaseException {
-        super(url);
+        this.connection = connect(url);
 
         try {
             Class.forName(driver);
@@ -32,12 +38,7 @@ class DerbyDB extends Database {
         Properties properties;
 
         // Get the csv file paths from properties file.
-        try (InputStream input = new FileInputStream("../config/csvTables.properties")) {
-            properties = new Properties();
-            properties.load(input);
-        } catch (IOException e) {
-            throw new DatabaseException("Could not load in csvTable properties file - " + e);
-        }
+        properties = getConfigProvider().getPropertyFile("csvTables");
 
         // Ingest the csv files into the tables.
         try (Statement statement = connection.createStatement()) {
@@ -73,6 +74,25 @@ class DerbyDB extends Database {
         } catch (IOException e) {
             throw new DatabaseException("Something went wrong when reading a line from the SQL file - " + e);
         }
+    }
+
+    /**
+     * Makes a connection to the database and returns the connection.
+     *
+     * @param url The URL of the database
+     * @throws DatabaseException thrown if connection could not be made.
+     */
+    private Connection connect(String url) throws DatabaseException {
+        Connection connection;
+        try {
+            connection = DriverManager.getConnection(url);
+        }
+        catch(SQLException e) {
+            e.printStackTrace();
+            throw new DatabaseException("Could not connect to the database - " + e);
+        }
+
+        return connection;
     }
 }
 

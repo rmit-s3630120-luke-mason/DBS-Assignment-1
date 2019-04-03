@@ -3,6 +3,8 @@ package ingestion;
 import java.io.*;
 import java.util.Properties;
 
+import static ingestion.ConfigProvider.getConfigProvider;
+
 /**
  * Responsible for the ingestion of data into a derby or mongo database.
  */
@@ -57,12 +59,15 @@ public class Ingest {
             }
 
             // Run the ingest for mongo
-//            if (args[0].equalsIgnoreCase(MONGO)) {
-//                MongoDB mongo = new MongoDB();
-//                mongo.connect();
-//                extractDataAndIngest(mongo, file, records, offset);
-//                mongo.exit();
-//            }
+            if (args[0].equalsIgnoreCase(MONGO)) {
+                MongoDB mongo = new MongoDB();
+                Properties properties = getConfigProvider().getPropertyFile("mongoConfig");
+                String destination = properties.getProperty("jsonFileDestination");
+                String filename = properties.getProperty("jsonFilename");
+                mongo.createJSONFromCSVs(destination + filename);
+                extractDataAndIngest(mongo, file, records, offset);
+                mongo.exit();
+            }
         }
         catch (DatabaseException e) {
             System.out.println("ERROR: " + e);
@@ -75,7 +80,7 @@ public class Ingest {
      * @return The DerbyDB instance.
      * @throws DatabaseException
      */
-    private static DerbyDB createDerbyDB() throws  DatabaseException{
+    private static DerbyDB createDerbyDB() throws DatabaseException {
         Properties properties;
 
         // load a properties file
