@@ -9,7 +9,6 @@ import static ingestion.ConfigProvider.getConfigProvider;
  *
  */
 class MongoDB {
-    private String jsonFileDestination = null;
     private Properties properties;
 
     MongoDB() throws DatabaseException {
@@ -21,27 +20,18 @@ class MongoDB {
      * Ingests the JSON file into mongoDB
      */
     void ingest() throws DatabaseException {
-        if (jsonFileDestination == null) {
-            throw new DatabaseException("Cannot ingest json data because the json data has not been generated");
-        }
-
         try {
-            Runtime.getRuntime().exec("mongoimport ");
+            Runtime.getRuntime().exec("mongoimport --db " +
+                    properties.getProperty("dbName") +
+                    " --collection " +
+                    properties.getProperty("collectionName") +
+                    " --file " +
+                    properties.getProperty("jsonFileDestination") +
+                    properties.getProperty("jsonFilename") +
+                    " --jsonArray\n ");
         } catch(IOException e) {
             throw new DatabaseException("Command could not be run - " + e);
         }
-    }
-
-    /**
-     * Creates a json file from the csv using a json structure from maps.
-     */
-    void createJSONFromCSVs() throws DatabaseException {
-
-
-    }
-
-    private void writeRecordAsJSON(File file) {
-
     }
 
     /**

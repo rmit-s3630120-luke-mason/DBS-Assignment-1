@@ -153,7 +153,7 @@ public class DataSplitter {
                         String[] values = line.split(",");
                         if (values.length == FIELDS.values().length) { // TODO get rid of this magic number
                             writeMongoValues(values, valuesMap);
-                            if (i % 1000 == 0) {
+                            if (i % (i/1000) == 0) {
                                 System.out.println("Lines Written: " + i);
                             }
                         } else {
@@ -168,7 +168,7 @@ public class DataSplitter {
                 try {
                     bufferedWriter.write(jsonObject.toJSONString());
                 } catch (IOException e) {
-                    throw new DatabaseException("Couldn't write json to file");
+                    throw new DatabaseException("Couldn't write json to file - " + e);
                 }
             }
         } catch (IOException e) {

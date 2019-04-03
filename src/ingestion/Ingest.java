@@ -30,7 +30,6 @@ public class Ingest {
             // Run the ingest for mongo
             if (args[0].equalsIgnoreCase(ConfigProvider.MONGO)) {
                 MongoDB mongo = new MongoDB();
-                mongo.createJSONFromCSVs();
                 mongo.ingest();
             }
         }
