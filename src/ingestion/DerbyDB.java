@@ -14,17 +14,19 @@ import static ingestion.ConfigProvider.getConfigProvider;
  */
 class DerbyDB {
     private Connection connection;
-
+    private Properties properties;
     private static final int SQL_STATEMENT_COUNT = 3;
 
     /**
      * Constructor that loads in the embedded derby driver.
+     * Creates a derbyDB based off the properties in the properties configuration file.
      */
-    DerbyDB(String url, String driver) throws DatabaseException {
-        this.connection = connect(url);
+    DerbyDB() throws DatabaseException {
+        properties = getConfigProvider().getPropertyFile(ConfigProvider.DERBY_CONFIG);
+        this.connection = connect();
 
         try {
-            Class.forName(driver);
+            Class.forName(properties.getProperty("driver"));
         } catch (Exception e) {
             e.printStackTrace();
             throw new DatabaseException("Could not create derby driver - " + e);
@@ -35,12 +37,6 @@ class DerbyDB {
      * Ingests the specified files into the derby DB database
      */
     void ingest() throws DatabaseException {
-        Properties properties;
-
-        // Get the csv file paths from properties file.
-        properties = getConfigProvider().getPropertyFile("csvTables");
-
-        // Ingest the csv files into the tables.
         try (Statement statement = connection.createStatement()) {
             statement.execute("call syscs_util.syscs_import_table(null, '" + DataSplitter.STREET + "', '" +
                     properties.getProperty(DataSplitter.STREET) + "', null, null, null, 0)");
@@ -79,13 +75,12 @@ class DerbyDB {
     /**
      * Makes a connection to the database and returns the connection.
      *
-     * @param url The URL of the database
      * @throws DatabaseException thrown if connection could not be made.
      */
-    private Connection connect(String url) throws DatabaseException {
+    private Connection connect() throws DatabaseException {
         Connection connection;
         try {
-            connection = DriverManager.getConnection(url);
+            connection = DriverManager.getConnection(properties.getProperty("url"));
         }
         catch(SQLException e) {
             e.printStackTrace();

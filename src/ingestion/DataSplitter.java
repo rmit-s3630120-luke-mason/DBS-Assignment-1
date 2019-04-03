@@ -55,19 +55,20 @@ public class DataSplitter {
             return;
         }
 
-        // Extract data for derby or mongo formatting.
-        if (args[0].equalsIgnoreCase(ConfigProvider.DERBY)) {
-            try {
-                createDerbyData(dataFile, records);
-            } catch (DatabaseException e) {
-                System.out.println("ERROR: " + e);
-            }
-        } else if (args[0].equalsIgnoreCase(ConfigProvider.MONGO)) {
-            createMongoDbData(dataFile, records);
-        } else {
-            System.out.println("Arg 1 must be either 'derby' or 'mongo'");
-        }
+        try {
+            // Extract data for derby or mongo formatting.
+            if (args[0].equalsIgnoreCase(ConfigProvider.DERBY)) {
 
+                    createDerbyData(dataFile, records);
+
+            } else if (args[0].equalsIgnoreCase(ConfigProvider.MONGO)) {
+                createMongoDbData(dataFile, records);
+            } else {
+                System.out.println("Arg 1 must be either 'derby' or 'mongo'");
+            }
+        } catch (DatabaseException e) {
+            System.out.println("ERROR: " + e);
+        }
     }
 
     /**
@@ -76,7 +77,7 @@ public class DataSplitter {
      * @throws DatabaseException
      */
     private static void createDerbyData(File dataFile, int records) throws DatabaseException {
-        Properties tables = getConfigProvider().getPropertyFile(ConfigProvider.CSV_TABLES);
+        Properties tables = getConfigProvider().getPropertyFile(ConfigProvider.DERBY_CONFIG);
 
         // Creating File objects for the csv files to write to.
         File f3 = new File(tables.getProperty(STREET));
@@ -91,9 +92,9 @@ public class DataSplitter {
 
         // Creating file writers from the file objects to use to write to the created files.
         try {
-            FileWriter fw1 = new FileWriter(f1);
-            FileWriter fw2 = new FileWriter(f2);
-            FileWriter fw3 = new FileWriter(f3);
+            FileWriter fw1 = new FileWriter(f1, false);
+            FileWriter fw2 = new FileWriter(f2, false);
+            FileWriter fw3 = new FileWriter(f3, false);
 
             // Splitting the main record up into three sets and writing the three sets to the three files.
             split(dataFile, records, fw1, fw2, fw3);
@@ -109,11 +110,51 @@ public class DataSplitter {
 
     /**
      *
+     *
      * @param dataFile
      * @param records
      */
-    private static void createMongoDbData (File dataFile, int records) {
-        
+    private static void createMongoDbData (File dataFile, int records) throws DatabaseException {
+        Properties properties = getConfigProvider().getPropertyFile(ConfigProvider.MONGO_CONFIG);
+        Map<String, Street> valuesMap = new HashMap<>();
+
+        // Create the jsonFile to write to.
+        try {
+            String destination = properties.getProperty("jsonFileDestination");
+            String filename = properties.getProperty("jsonFilename");
+            String fileDestination = destination + filename;
+
+            // Creates the Json File if it does note exist.
+            // Used to write contents to the file.
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileDestination, false));
+
+            // Read each record and write the record to the json file
+            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(dataFile))) {
+
+                // Skip over the header line
+                bufferedReader.readLine();
+
+                // split each line
+                for (int i = 0; i < records; i++) {
+                    String line = bufferedReader.readLine();
+                    if (line == null) {
+                        System.out.println("End of file reached, can't read anymore lines. Line reached = " + i);
+                        break;
+                    }
+
+                    String[] values = line.split(",");
+                    if (values.length == FIELDS.values().length) { // TODO get rid of this magic number
+                        writeMongoValues(values, valuesMap);
+                    } else {
+                        System.out.println(Arrays.toString(values) + " - was not included");
+                    }
+                }
+            }
+
+
+        } catch (IOException e) {
+            throw new DatabaseException("Could not create the json file - " + e);
+        }
     }
 
     /**
@@ -128,8 +169,7 @@ public class DataSplitter {
      */
     private static void split (File file,int records, FileWriter f1, FileWriter f2, FileWriter f3)
         throws IOException {
-        try (FileReader fileReader = new FileReader(file)) {
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
 
             // Skip over the header line
             bufferedReader.readLine();
@@ -144,11 +184,21 @@ public class DataSplitter {
 
                 String[] values = line.split(",");
                 if (values.length == FIELDS.values().length) { // TODO get rid of this magic number
-                    writeValues(values, f1, f2, f3);
+                    writeDerbyValues(values, f1, f2, f3);
                 } else {
                     System.out.println(Arrays.toString(values) + " - was not included");
                 }
             }
+        }
+    }
+
+    private static void writeMongoValues(String[] values, Map<String, Street> map) {
+        String streetPK = values[FIELDS.STREET_NAME.ordinal()];
+
+        if (map.containsKey(streetPK)) {
+            Street street = map.get(streetPK);
+        } else {
+            map.put(streetPK, );
         }
     }
 
@@ -158,7 +208,7 @@ public class DataSplitter {
      * @param f2
      * @param f3
      */
-    private static void writeValues (String[]values, FileWriter f1, FileWriter f2, FileWriter f3) throws IOException
+    private static void writeDerbyValues(String[]values, FileWriter f1, FileWriter f2, FileWriter f3) throws IOException
     {
 
         // Allocating split record to 3 different records as string to be written.
@@ -205,5 +255,53 @@ public class DataSplitter {
         Date lol = new Date(dateStr);
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         return dateFormatter.format(lol);
+    }
+}
+
+class Street {
+    public String streetName;
+    public String betweenStreet1;
+    public String betweenStreet2;
+    public String area;
+    public Map<String, ParkingBay> parkingBays;
+
+    Street(String streetName, String betweenStreet1, String betweenStreet2, String area) {
+        this.streetName = streetName;
+        this.betweenStreet1 = betweenStreet1;
+        this.betweenStreet2 = betweenStreet2;
+        this.area = area;
+        this.parkingBays = new HashMap<>();
+    }
+}
+
+class ParkingBay {
+    public String streetMarker;
+    public String signDetails;
+    public int streetId;
+    public int sideOfStreet;
+    public Map<String, ParkingTime> parkingTimes;
+
+    ParkingBay(String streetMarker, String signDetails, int streetId, int sideOfStreet) {
+        this.streetMarker = streetMarker;
+        this.signDetails = signDetails;
+        this.streetId = streetId;
+        this.sideOfStreet = sideOfStreet;
+        this.parkingTimes = new HashMap<>();
+    }
+}
+
+class ParkingTime {
+    public int deviceId;
+    public String arrivalTime;
+    public String departureTime;
+    public int duration;
+    public boolean inViolation;
+
+    ParkingTime(int deviceId, String arrivalTime, String departureTime, int duration, boolean inViolation) {
+        this.deviceId = deviceId;
+        this.arrivalTime = arrivalTime;
+        this.departureTime = departureTime;
+        this.duration = duration;
+        this.inViolation = inViolation;
     }
 }

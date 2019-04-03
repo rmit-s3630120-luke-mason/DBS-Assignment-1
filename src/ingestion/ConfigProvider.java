@@ -9,7 +9,6 @@ import java.util.Properties;
 public class ConfigProvider {
     public static final String MONGO_CONFIG = "mongoConfig.properties";
     public static final String DERBY_CONFIG = "derbyConfig.properties";
-    public static final String CSV_TABLES = "csvTables.properties";
     public static final String DERBY_TABLES = "derbyTables.sql";
 
     public static final String DERBY = "derby";

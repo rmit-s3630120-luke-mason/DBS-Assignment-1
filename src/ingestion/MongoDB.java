@@ -36,25 +36,7 @@ class MongoDB {
      * Creates a json file from the csv using a json structure from maps.
      */
     void createJSONFromCSVs() throws DatabaseException {
-        try {
-            String destination = properties.getProperty("jsonFileDestination");
-            String filename = properties.getProperty("jsonFilename");
-            String fileDestination = destination + filename;
 
-            File jsonFile = new File(fileDestination);
-            jsonFile.createNewFile();
-
-//            BufferedReader bufferedReader = new BufferedReader(new FileReader());
-//            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(jsonFile));
-
-//            fileWriter.write();
-
-//            writeRecordAsJSON();
-
-            jsonFileDestination = fileDestination;
-        } catch (IOException e) {
-            throw new DatabaseException("Could not create the json file - " + e);
-        }
 
     }
 

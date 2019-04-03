@@ -1,8 +1,5 @@
 package ingestion;
 
-import java.io.*;
-import java.util.Properties;
-
 /**
  * Responsible for the ingestion of data into a derby or mongo database.
  */
@@ -49,7 +46,7 @@ public class Ingest {
 
             // Run the ingest for derby
             if (args[0].equalsIgnoreCase(ConfigProvider.DERBY)) {
-                DerbyDB derby = createDerbyDB();
+                DerbyDB derby = new DerbyDB();
                 derby.initialiseTables();
                 derby.ingest();
             }
@@ -64,29 +61,5 @@ public class Ingest {
         catch (DatabaseException e) {
             System.out.println("ERROR: " + e);
         }
-    }
-
-    /**
-     * Creates a derbyDB based off the properties in the properties configuration file.
-     *
-     * @return The DerbyDB instance.
-     * @throws DatabaseException
-     */
-    private static DerbyDB createDerbyDB() throws DatabaseException {
-        Properties properties;
-
-        // load a properties file
-        try (InputStream input = new FileInputStream("../config/derbyConfig.properties")) {
-            properties = new Properties();
-            properties.load(input);
-        } catch (IOException e) {
-            throw new DatabaseException("Could not load in Derby properties - " + e);
-        }
-
-        // Get jdbc driver
-        String driver = properties.getProperty("driver");
-        String url = properties.getProperty("url");
-
-        return new DerbyDB(url, driver);
     }
 }
