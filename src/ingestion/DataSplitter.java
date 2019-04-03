@@ -4,6 +4,8 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static ingestion.ConfigProvider.getConfigProvider;
+
 /**
  * Splits a csv ile containing all the data, into separate csv files that represent each table of data in the derbyDB
  */
@@ -25,21 +27,56 @@ public class DataSplitter {
     }
 
     private static Map<String, List<String>> mappedValues = new HashMap<>();
-    public static final String STREET = "STREET";
-    public static final String PARKING_BAY = "PARKINGBAY";
-    public static final String PARKING_TIME = "PARKINGTIME";
+    static final String STREET = "STREET";
+    static final String PARKING_BAY = "PARKINGBAY";
+    static final String PARKING_TIME = "PARKINGTIME";
 
     /**
      * Splits data in the file specified into other files.
      *
      * @param args [filename to split, amount of data lines to read]
      */
-    public static void main(String[] args) throws IOException {
-        Properties tables;
-        try (InputStream input = new FileInputStream("../config/csvTables.properties")) {
-            tables = new Properties();
-            tables.load(input);
+    public static void main(String[] args) {
+        int records;
+        File dataFile;
+
+        // Get the data file
+        dataFile = new File(args[0]);
+        if (!dataFile.exists()) {
+            System.out.println("File does not exist - " + dataFile.getAbsolutePath());
+            return;
         }
+
+        // Get the record amount
+        try {
+            records = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            System.out.println("Could not parse the amount: " + args[1] + " into a number");
+            return;
+        }
+
+        // Extract data for derby or mongo formatting.
+        if (args[0].equalsIgnoreCase(ConfigProvider.DERBY)) {
+            try {
+                createDerbyData(dataFile, records);
+            } catch (DatabaseException e) {
+                System.out.println("ERROR: " + e);
+            }
+        } else if (args[0].equalsIgnoreCase(ConfigProvider.MONGO)) {
+            createMongoDbData(dataFile, records);
+        } else {
+            System.out.println("Arg 1 must be either 'derby' or 'mongo'");
+        }
+
+    }
+
+    /**
+     * @param dataFile
+     * @param records
+     * @throws DatabaseException
+     */
+    private static void createDerbyData(File dataFile, int records) throws DatabaseException {
+        Properties tables = getConfigProvider().getPropertyFile(ConfigProvider.CSV_TABLES);
 
         // Creating File objects for the csv files to write to.
         File f3 = new File(tables.getProperty(STREET));
@@ -52,30 +89,31 @@ public class DataSplitter {
         mappedValues.put(PARKING_BAY, new ArrayList<>());
         mappedValues.put(PARKING_TIME, new ArrayList<>());
 
-        // Creating the file if it doesn't exist
-        f1.createNewFile();
-        f2.createNewFile();
-        f3.createNewFile();
-
         // Creating file writers from the file objects to use to write to the created files.
-        FileWriter fw1 = new FileWriter(f1);
-        FileWriter fw2 = new FileWriter(f2);
-        FileWriter fw3 = new FileWriter(f3);
+        try {
+            FileWriter fw1 = new FileWriter(f1);
+            FileWriter fw2 = new FileWriter(f2);
+            FileWriter fw3 = new FileWriter(f3);
 
-        // Get the file
-        File file = new File(args[0]);
-        if (!file.exists()) {
-            System.out.println("File does not exist - " + file.getAbsolutePath());
-            return;
+            // Splitting the main record up into three sets and writing the three sets to the three files.
+            split(dataFile, records, fw1, fw2, fw3);
+
+            // Closing the file writers
+            fw1.close();
+            fw2.close();
+            fw3.close();
+        } catch (IOException e) {
+            throw new DatabaseException("IO Error occurred with the csv files - " + e);
         }
+    }
 
-        // Splitting the main record up into three sets and writing the three sets to the three files.
-        split(file, Integer.parseInt(args[1]), fw1, fw2, fw3);
-
-        // Closing the file writers
-        fw1.close();
-        fw2.close();
-        fw3.close();
+    /**
+     *
+     * @param dataFile
+     * @param records
+     */
+    private static void createMongoDbData (File dataFile, int records) {
+        
     }
 
     /**
@@ -88,8 +126,8 @@ public class DataSplitter {
      * @param f3
      * @throws IOException The file could not be read from.
      */
-    private static void split(File file, int records, FileWriter f1, FileWriter f2, FileWriter f3)
-            throws IOException {
+    private static void split (File file,int records, FileWriter f1, FileWriter f2, FileWriter f3)
+        throws IOException {
         try (FileReader fileReader = new FileReader(file)) {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
@@ -120,7 +158,8 @@ public class DataSplitter {
      * @param f2
      * @param f3
      */
-    private static void writeValues(String[] values, FileWriter f1, FileWriter f2, FileWriter f3) throws IOException {
+    private static void writeValues (String[]values, FileWriter f1, FileWriter f2, FileWriter f3) throws IOException
+    {
 
         // Allocating split record to 3 different records as string to be written.
         String arrivalTime = formatDate(values[FIELDS.ARRIVAL_TIME.ordinal()]);
@@ -162,7 +201,7 @@ public class DataSplitter {
         }
     }
 
-    private static String formatDate(String dateStr) {
+    private static String formatDate (String dateStr){
         Date lol = new Date(dateStr);
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         return dateFormatter.format(lol);

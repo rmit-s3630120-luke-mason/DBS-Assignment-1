@@ -7,6 +7,14 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class ConfigProvider {
+    public static final String MONGO_CONFIG = "mongoConfig.properties";
+    public static final String DERBY_CONFIG = "derbyConfig.properties";
+    public static final String CSV_TABLES = "csvTables.properties";
+    public static final String DERBY_TABLES = "derbyTables.sql";
+
+    public static final String DERBY = "derby";
+    public static final String MONGO = "mongo";
+
     private static ConfigProvider configProvider = null;
     private static String configDirectory = "../config/";
     private ConfigProvider() {
@@ -29,14 +37,14 @@ public class ConfigProvider {
      * @throws DatabaseException thrown if an issue occurred in finding the file or loading in the properties in the file.
      */
     Properties getPropertyFile(String propertyFileName) throws DatabaseException {
-        try (InputStream input = new FileInputStream(configDirectory + propertyFileName + ".properties")) {
+        try (InputStream input = new FileInputStream(configDirectory + propertyFileName)) {
             Properties properties = new Properties();
             properties.load(input);
             return properties;
         } catch (FileNotFoundException e) {
-            throw new DatabaseException("Could not find the '" + propertyFileName + "' property file - " + e);
+            throw new DatabaseException("Could not find the '" + propertyFileName + "' file - " + e);
         } catch (IOException e) {
-            throw new DatabaseException("Could not load in '" + propertyFileName + "' properties file - " + e);
+            throw new DatabaseException("Could not load in '" + propertyFileName + "' file - " + e);
         }
     }
 }

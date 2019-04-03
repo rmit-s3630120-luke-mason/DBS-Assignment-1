@@ -3,14 +3,10 @@ package ingestion;
 import java.io.*;
 import java.util.Properties;
 
-import static ingestion.ConfigProvider.getConfigProvider;
-
 /**
  * Responsible for the ingestion of data into a derby or mongo database.
  */
 public class Ingest {
-    private static final String DERBY = "derby";
-    private static final String MONGO = "mongo";
 
     /**
      * Runs the database CSV ingestion script
@@ -52,21 +48,17 @@ public class Ingest {
         try {
 
             // Run the ingest for derby
-            if (args[0].equalsIgnoreCase(DERBY)) {
+            if (args[0].equalsIgnoreCase(ConfigProvider.DERBY)) {
                 DerbyDB derby = createDerbyDB();
                 derby.initialiseTables();
                 derby.ingest();
             }
 
             // Run the ingest for mongo
-            if (args[0].equalsIgnoreCase(MONGO)) {
+            if (args[0].equalsIgnoreCase(ConfigProvider.MONGO)) {
                 MongoDB mongo = new MongoDB();
-                Properties properties = getConfigProvider().getPropertyFile("mongoConfig");
-                String destination = properties.getProperty("jsonFileDestination");
-                String filename = properties.getProperty("jsonFilename");
-                mongo.createJSONFromCSVs(destination + filename);
-                extractDataAndIngest(mongo, file, records, offset);
-                mongo.exit();
+                mongo.createJSONFromCSVs();
+                mongo.ingest();
             }
         }
         catch (DatabaseException e) {
