@@ -55,7 +55,7 @@ class DerbyDB {
      * @throws DatabaseException thrown if an issue occurred.
      */
     void initialiseTables() throws DatabaseException {
-        try (FileReader fileReader = new FileReader("../config/derbyTables.sql")) {
+        try (FileReader fileReader = new FileReader(getConfigProvider().getFile(ConfigProvider.DERBY_TABLES))) {
             try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
                 for (int i = 0; i < SQL_STATEMENT_COUNT; i++) {
                     String sql = bufferedReader.readLine();

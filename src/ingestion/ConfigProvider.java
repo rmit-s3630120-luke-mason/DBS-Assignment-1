@@ -1,9 +1,6 @@
 package ingestion;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Properties;
 
 public class ConfigProvider {
@@ -45,5 +42,15 @@ public class ConfigProvider {
         } catch (IOException e) {
             throw new DatabaseException("Could not load in '" + propertyFileName + "' file - " + e);
         }
+    }
+
+    /**
+     * Returns the file specified  form the config directory.
+     *
+     * @param filename
+     * @return
+     */
+    File getFile(String filename) {
+        return new File(configDirectory + filename);
     }
 }

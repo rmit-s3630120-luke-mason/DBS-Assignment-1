@@ -330,8 +330,8 @@ public class DataSplitter {
     }
 
     private static String formatDate (String dateStr){
-        Date lol = new Date(dateStr);
+        Date date = new Date(dateStr);
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        return dateFormatter.format(lol);
+        return dateFormatter.format(date);
     }
 }
