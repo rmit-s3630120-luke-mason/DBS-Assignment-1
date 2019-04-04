@@ -151,9 +151,9 @@ public class DataSplitter {
                         }
 
                         String[] values = line.split(",");
-                        if (values.length == FIELDS.values().length) { // TODO get rid of this magic number
+                        if (values.length == FIELDS.values().length) {
                             writeMongoValues(values, valuesMap);
-                            if (i % (i/1000) == 0) {
+                            if (i % 1000 == 0) {
                                 System.out.println("Lines Written: " + i);
                             }
                         } else {

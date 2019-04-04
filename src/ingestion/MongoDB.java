@@ -27,8 +27,7 @@ class MongoDB {
                     properties.getProperty("collectionName") +
                     " --file " +
                     properties.getProperty("jsonFileDestination") +
-                    properties.getProperty("jsonFilename") +
-                    " --jsonArray\n ");
+                    properties.getProperty("jsonFilename"));
         } catch(IOException e) {
             throw new DatabaseException("Command could not be run - " + e);
         }
