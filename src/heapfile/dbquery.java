@@ -140,24 +140,24 @@ public class dbquery {
      *  Prints out the records found.
      */
     private static void printRecord(byte[] record) {
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(record);
-        byteArrayInputStream.read();
-        byte[] daName = Arrays.copyOfRange(record, 0, 30);
-        String fieldDaName = new String(daName, CHARSET);
-        int fieldDeviceID =
-        String fieldArivalTime;
-        String filedDepartureTime;
-
-
-        String recordStr = "";
-        byte[] daName = Arrays.copyOfRange(record, 0, Schema.DA_NAME);
-        byte[] deviceId = Arrays.copyOfRange(record, Schema.DA_NAME, Schema.DA_NAME + Schema.DEVICE_ID);
-
-        int id = Integer.parseInt(new String(deviceId, CHARSET));
-        recordStr = recordStr + new String(daName, CHARSET) + "  " + id;
-        System.out.println(recordStr);
-        getIntegerFromBytes();
-        getStringFromBytes(Arrays.copyOfRange(record, 0, Schema.DA_NAME));
+//        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(record);
+//        byteArrayInputStream.read();
+//        byte[] daName = Arrays.copyOfRange(record, 0, 30);
+//        String fieldDaName = new String(daName, CHARSET);
+//        int fieldDeviceID =
+//        String fieldArivalTime;
+//        String filedDepartureTime;
+//
+//
+//        String recordStr = "";
+//        byte[] daName = Arrays.copyOfRange(record, 0, Schema.DA_NAME);
+//        byte[] deviceId = Arrays.copyOfRange(record, Schema.DA_NAME, Schema.DA_NAME + Schema.DEVICE_ID);
+//
+//        int id = Integer.parseInt(new String(deviceId, CHARSET));
+//        recordStr = recordStr + new String(daName, CHARSET) + "  " + id;
+//        System.out.println(recordStr);
+//        getIntegerFromBytes();
+//        getStringFromBytes(Arrays.copyOfRange(record, 0, Schema.DA_NAME));
     }
 
     /**

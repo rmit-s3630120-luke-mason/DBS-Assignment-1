@@ -249,7 +249,7 @@ public class DataSplitter {
             String signDetails = values[FIELDS.SIGN.ordinal()];
             int streetId = Integer.parseInt(values[FIELDS.STREET_ID.ordinal()]);
             int sideOfStreet = Integer.parseInt(values[FIELDS.SIDE_OF_STREET.ordinal()]);
-            int streetMarker = Integer.parseInt(values[FIELDS.STREET_MARKER.ordinal()]);
+            String streetMarker = values[FIELDS.STREET_MARKER.ordinal()];
 
             Map<String, Object> parkingBay = new HashMap<>();
             parkingBay.put("signDetails", signDetails);
