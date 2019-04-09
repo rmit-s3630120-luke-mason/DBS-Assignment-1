@@ -228,7 +228,7 @@ public class DataSplitter {
         String parkingBaysKey = "parkingBays";
 
         String streetPK = values[FIELDS.STREET_NAME.ordinal()];
-        String parkingBayPK = values[FIELDS.STREET_MARKER.ordinal()];
+        String parkingBayPK = values[FIELDS.DEVICE_ID.ordinal()];
 
         if (!map.containsKey(streetPK)) {
             String betweenStreet1 = values[FIELDS.BETWEEN_STREET_1.ordinal()];
@@ -251,11 +251,13 @@ public class DataSplitter {
             String signDetails = values[FIELDS.SIGN.ordinal()];
             int streetId = Integer.parseInt(values[FIELDS.STREET_ID.ordinal()]);
             int sideOfStreet = Integer.parseInt(values[FIELDS.SIDE_OF_STREET.ordinal()]);
+            int streetMarker = Integer.parseInt(values[FIELDS.STREET_MARKER.ordinal()]);
 
             Map<String, Object> parkingBay = new HashMap<>();
             parkingBay.put("signDetails", signDetails);
             parkingBay.put("streetId", streetId);
             parkingBay.put("sideOfStreet", sideOfStreet);
+            parkingBay.put("streetMarker", streetMarker);
             parkingBay.put(parkingTimesKey, new ArrayList<Map<String, Object>>());
 
             parkingBays.put(parkingBayPK, parkingBay);
@@ -267,14 +269,12 @@ public class DataSplitter {
         // Since all parking times are unique we just keep appending parking
         // times to list knowing there wont be duplicates and therefore don't
         // need to check for duplicates
-        int deviceId = Integer.parseInt(values[FIELDS.DEVICE_ID.ordinal()]);
         String arrivalTime = values[FIELDS.ARRIVAL_TIME.ordinal()];
         String departureTime = values[FIELDS.DEPARTURE_TIME.ordinal()];
         long duration = Long.parseLong(values[FIELDS.DURATION_SECONDS.ordinal()]);
         boolean inViolation = Boolean.parseBoolean(values[FIELDS.IN_VIOLATION.ordinal()]);
 
         Map<String, Object> parkingTimeMap = new HashMap<>();
-        parkingTimeMap.put("deviceId", deviceId);
         parkingTimeMap.put("arrivalTime", arrivalTime);
         parkingTimeMap.put("departureTime", departureTime);
         parkingTimeMap.put("duration", duration);
@@ -299,13 +299,13 @@ public class DataSplitter {
                         arrivalTime + "," +
                         formatDate(values[FIELDS.DEPARTURE_TIME.ordinal()]) + "," +
                         values[FIELDS.DURATION_SECONDS.ordinal()] + "," +
-                        values[FIELDS.IN_VIOLATION.ordinal()] + "," +
-                        values[FIELDS.STREET_MARKER.ordinal()] + "\n";
+                        values[FIELDS.IN_VIOLATION.ordinal()] + "\n";
 
         f1.write(parkingTimeRecord);
 
 
         String parkingBayRecord =
+                values[FIELDS.DEVICE_ID.ordinal()] + "," +
                 values[FIELDS.STREET_MARKER.ordinal()] + "," +
                         values[FIELDS.SIGN.ordinal()] + "," +
                         values[FIELDS.STREET_ID.ordinal()] + "," +
