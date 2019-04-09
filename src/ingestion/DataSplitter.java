@@ -84,8 +84,10 @@ public class DataSplitter {
     }
 
     /**
-     * @param dataFile
-     * @param records
+     * Creates the derby data files.
+     *
+     * @param dataFile The data file to read the data from.
+     * @param records  The amount of records to read from the datafile.
      * @throws DatabaseException
      */
     private static void createDerbyData(File dataFile, int records) throws DatabaseException {
@@ -115,10 +117,10 @@ public class DataSplitter {
     }
 
     /**
+     * Creates the mongo json file.
      *
-     *
-     * @param dataFile
-     * @param records
+     * @param dataFile  The datafile to read the data from.
+     * @param records   The amount of records to read.
      */
     private static void createMongoDbData (File dataFile, int records) throws DatabaseException {
         Properties properties = getConfigProvider().getPropertyFile(ConfigProvider.MONGO_CONFIG);
@@ -175,18 +177,18 @@ public class DataSplitter {
     }
 
     /**
-     * ingest the number of records into the database from the file.
+     * Split the file into the 3 files.
      *
-     * @param file
-     * @param records
-     * @param f1
-     * @param f2
-     * @param f3
+     * @param dataFile  The datafile to read data from.
+     * @param records   The amount of records to read.
+     * @param f1        The file writer for the first table.
+     * @param f2        The file writer for the second table.
+     * @param f3        The file writer for the third table.
      * @throws IOException The file could not be read from.
      */
-    private static void split (File file, int records, FileWriter f1, FileWriter f2, FileWriter f3)
+    private static void split (File dataFile, int records, FileWriter f1, FileWriter f2, FileWriter f3)
         throws IOException {
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(dataFile))) {
 
             // Skip over the header line
             bufferedReader.readLine();
@@ -216,10 +218,10 @@ public class DataSplitter {
     }
 
     /**
+     * Writes the mongo values to a map.
      *
-     *
-     * @param values
-     * @param map
+     * @param values  The record's values to write.
+     * @param map     The map to write to.
      */
     private static void writeMongoValues(String[] values, Map<String, Map<String, Object>> map) throws DatabaseException {
         String parkingTimesKey = "parkingTimes";
@@ -282,10 +284,12 @@ public class DataSplitter {
     }
 
     /**
-     * @param values
-     * @param f1
-     * @param f2
-     * @param f3
+     * Writes the derby values to the 3 files.
+     *
+     * @param values  The records values to write to the files.
+     * @param f1      The file writer for the first table.
+     * @param f2      The file writer for the second table.
+     * @param f3      The file writer for the third table.
      */
     private static void writeDerbyValues(String[]values, FileWriter f1, FileWriter f2, FileWriter f3) throws IOException
     {
@@ -330,6 +334,12 @@ public class DataSplitter {
         }
     }
 
+    /**
+     * Formats the string value into a specific date format that derby accepts.
+     *
+     * @param dateStr  The date string to reformat.
+     * @return  The String with the new date format.
+     */
     private static String formatDate (String dateStr){
         Date date = new Date(dateStr);
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");

@@ -63,16 +63,16 @@ public class dbload {
     }
 
     /**
+     * Creates a heap file from the dataFile specified.
      *
-     *
-     * @param file
-     * @param pageSize
-     * @throws DbLoadException
+     * @param dataFile The data file to read data from.
+     * @param pageSize The page size to write to the heap file with.
+     * @throws DbLoadException thrown if an issue occures.
      */
-    private static void createHeapFile(File file, int pageSize) throws DbLoadException {
+    private static void createHeapFile(File dataFile, int pageSize) throws DbLoadException {
         FileReader fileReader;
         try {
-            fileReader = new FileReader(file);
+            fileReader = new FileReader(dataFile);
         } catch (FileNotFoundException e) {
             throw new DbLoadException("File specified was not found - " + e);
         }
@@ -99,10 +99,11 @@ public class dbload {
                 while((line = bufferedReader.readLine()) != null) {
                     String[] values = line.split(",");
 
-                    if (values.length != Schema.FIELDS.values().length) {
-                        throw new DbLoadException("File given does not contain the correct number of fields");
+                    if (values.length != Schema.FIELDS.values().length - 1) {
+                        throw new DbLoadException("File given does not contain the correct number of fields: " + values.length);
                     }
 
+                    // Check if the page is full
                     if (lines % maxRecordsPerPage == 0 && lines != 0) {
                         writePageToHeapFile(page, fileOutputStream);
                         pageCount++;
@@ -110,10 +111,10 @@ public class dbload {
                         pageOffset = 0;
                     }
 
+                    // Add record to the page since it is not full yet.
                     addRecordToPage(page, values, pageOffset);
                     pageOffset+= Schema.getTotalRecordSize();
                     recordCount++;
-
                     lines++;
                 }
                 pageCount++;
@@ -128,10 +129,10 @@ public class dbload {
      * Adds a record of values to the page.
      * It is assumed that the record will fit in the page size with the given offset.
      *
-     * @param page
-     * @param values
-     * @param pageOffset
-     * @throws DbLoadException
+     * @param page        The page size.
+     * @param values      Te values to add to the page.
+     * @param pageOffset  The offset of the values to add to the page.
+     * @throws DbLoadException thrown if an issue occures.
      */
     private static void addRecordToPage(byte[] page, String[] values, int pageOffset) throws DbLoadException {
 
@@ -145,20 +146,21 @@ public class dbload {
         ).getBytes();
 
         attachField(page, DA_NAME, pageOffset);
-        System.arraycopy(DA_NAME, 0, page, pageOffset, DA_NAME.length);
 
-        int recordOffset = Schema.getOffset(Schema.FIELDS.DA_NAME);
+        int recordOffset = Schema.getSize(Schema.FIELDS.DA_NAME);
         int fieldSize;
 
         // For each field, Add it to the page but its FULL field type size, not just its value size.
         // Start i at 1 to skip the DA_NAME value
         for(int i = 1; i < Schema.FIELDS.values().length; i++) {
-            String value = values[i];
+            String value = values[i - 1];
             Schema.FIELDS field = Schema.FIELDS.values()[i];
 
             // Holds actual size and value in field
             byte[] fieldValue;
 
+            // Correctly serialise the specific string value into the correct dataType.
+            // Each field has a different data type to be transposed into.
             switch(field) {
                 case DEVICE_ID:
                     fieldSize = Schema.getSize(Schema.FIELDS.DEVICE_ID);
