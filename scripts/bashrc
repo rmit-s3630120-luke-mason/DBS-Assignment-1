@@ -1,4 +1,0 @@
-export DBS_JARS=/Users/lukemason/Documents/Database\ Systems/DBS-Assignment-    1/jars
-export DERBY_INSTALL=/opt/Apache/db-derby-10.14.2.0-bin
-export DERBY_HOME=$DERBY_INSTALL
-export CLASSPATH=$DERBY_INSTALL/lib/derby.jar:$DERBY_INSTALL/lib/derbytools.jar:$DBS_JARS/json-simple-1.1.jar:.
