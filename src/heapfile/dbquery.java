@@ -7,6 +7,9 @@ import java.util.Properties;
 
 import static heapfile.dbload.CHARSET;
 
+/**
+ *
+ */
 public class dbquery {
     private static int recordsFound = 0;
 
@@ -19,7 +22,7 @@ public class dbquery {
             return;
         }
 
-
+        long start = new Date().getTime();
         try {
             int pageSize = stringToInt(args[1]);
             File heapfile = getHeapFile(pageSize);
@@ -28,11 +31,17 @@ public class dbquery {
         } catch (Exception e) {
             System.out.println("ERROR: " + e);
         }
+
+        long end = new Date().getTime();
+
+        System.out.println("Time taken: " + (end - start) + " ms");
+        // TODO Finish code comments
         System.out.println("The amount of records found that match: " + recordsFound);
     }
 
     /**
-     * Converts string to Int
+     * Converts string to Int.
+     *
      * @return The int.
      * @throws DbQueryException If the string could not be converted to a integer.
      */
@@ -40,7 +49,7 @@ public class dbquery {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            throw new DbQueryException("Could not parse the int to string");
+            throw new DbQueryException("Could not parse the int to string - " + e);
         }
     }
 

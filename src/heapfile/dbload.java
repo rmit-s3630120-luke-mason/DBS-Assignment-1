@@ -9,12 +9,13 @@ import java.util.Properties;
 
 import static heapfile.HeapFileConfigProvider.getHeapfileConfigProvider;
 
+/**
+ * This program loads in the specified datafile into a heapfile.
+ */
 public class dbload {
     static final Charset CHARSET = StandardCharsets.UTF_8;
-    private static int recordAmount = 0;
-    private static int pageAmount = 0;
-
-
+    private static int recordCount = 0;
+    private static int pageCount = 0;
 
     public static void main(String[] args) {
 
@@ -55,8 +56,8 @@ public class dbload {
 
         long end = new Date().getTime();
 
-        System.out.println("Number of records loaded: " + recordAmount);
-        System.out.println("Number of pages used: " + pageAmount);
+        System.out.println("Number of records loaded: " + recordCount);
+        System.out.println("Number of pages used: " + pageCount);
         System.out.println("Size of one record: " + Schema.getTotalRecordSize() +  " bytes");
         System.out.println("Time taken to create heap file: " + (end - start) + " ms");
     }
@@ -104,18 +105,18 @@ public class dbload {
 
                     if (lines % maxRecordsPerPage == 0 && lines != 0) {
                         writePageToHeapFile(page, fileOutputStream);
-                        pageAmount++;
+                        pageCount++;
                         page = new byte[pageSize];
                         pageOffset = 0;
                     }
 
                     addRecordToPage(page, values, pageOffset);
                     pageOffset+= Schema.getTotalRecordSize();
-                    recordAmount++;
+                    recordCount++;
 
                     lines++;
                 }
-                pageAmount++;
+                pageCount++;
                 writePageToHeapFile(page, fileOutputStream);
             }
         } catch (IOException e) {
