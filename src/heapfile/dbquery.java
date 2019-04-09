@@ -8,7 +8,7 @@ import java.util.Properties;
 import static heapfile.dbload.CHARSET;
 
 /**
- *
+ * Makes a saerch query on a heapfile.
  */
 public class dbquery {
     private static int recordsFound = 0;
@@ -35,7 +35,6 @@ public class dbquery {
         long end = new Date().getTime();
 
         System.out.println("Time taken: " + (end - start) + " ms");
-        // TODO Finish code comments
         System.out.println("The amount of records found that match: " + recordsFound);
     }
 
@@ -131,106 +130,7 @@ public class dbquery {
         searchText = new String(txt, CHARSET);
         if (field.contains(searchText)) {
             recordsFound++;
-//            printRecord(record);
             System.out.println(field);
         }
     }
-
-    /**
-     *  Prints out the records found.
-     */
-    private static void printRecord(byte[] record) {
-//        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(record);
-//        byteArrayInputStream.read();
-//        byte[] daName = Arrays.copyOfRange(record, 0, 30);
-//        String fieldDaName = new String(daName, CHARSET);
-//        int fieldDeviceID =
-//        String fieldArivalTime;
-//        String filedDepartureTime;
-//
-//
-//        String recordStr = "";
-//        byte[] daName = Arrays.copyOfRange(record, 0, Schema.DA_NAME);
-//        byte[] deviceId = Arrays.copyOfRange(record, Schema.DA_NAME, Schema.DA_NAME + Schema.DEVICE_ID);
-//
-//        int id = Integer.parseInt(new String(deviceId, CHARSET));
-//        recordStr = recordStr + new String(daName, CHARSET) + "  " + id;
-//        System.out.println(recordStr);
-//        getIntegerFromBytes();
-//        getStringFromBytes(Arrays.copyOfRange(record, 0, Schema.DA_NAME));
-    }
-
-    /**
-     *  Gets string form array of bytes.
-     *
-     * @param value
-     * @return
-     */
-    private static String getStringFromBytes(byte[] value) {
-        return new String(value, CHARSET);
-    }
-
-//    /**
-//     * Gets interget fmor array fo bytes.
-//     *
-//     * @param value
-//     * @return
-//     */
-//    private static int getIntegerFromBytes(byte[] value) {
-//        return Integer.parseInt();
-//    }
-
-    /**
-     * Gets the 4 byte timestamp value from the date string.
-     *
-     * @param dateStr  The date string
-     * @return  4 byte timestamp array.
-     */
-    private static byte[] getTimestampBytes(String dateStr) {
-        Date date = new Date(dateStr);
-        int timeInSec = (int)date.getTime() / 1000;
-
-        return intToBytes(timeInSec);
-    }
-
-    /**
-     * Gets the 4 bytes values from an integer.
-     *
-     * @param value The int value.
-     * @return The bytes that represent the integer.
-     */
-    private static byte[] intToBytes(int value) {
-        return new byte[] {
-                (byte)(value >>> 24),
-                (byte)(value >>> 16),
-                (byte)(value >>> 8),
-                (byte)value};
-    }
-
-    /**
-     * Gets the byte of a boolean.
-     *
-     * @param bool The boolean value
-     * @return A byte representing the boolean value.
-     */
-    private static byte booleanToByte(boolean bool) {
-        return (byte) (bool ? 1 : 0 );
-    }
-
-
-//    /**
-//     * Converts the long to a byte array.
-//     *
-//     * @param x The long value.
-//     * @return The byte array.
-//     */
-//    private static byte[] BytesToLong(byte[] x) {
-//        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-//        buffer.putLong(x);
-//        buffer.get
-//
-//        LongBuffer longBuffer = LongBuffer.allocate(Long.BYTES);
-//        longBuffer.
-//        return buffer.array();
-//    }
 }

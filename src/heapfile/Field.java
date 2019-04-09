@@ -1,8 +1,11 @@
 package heapfile;
 
-public class Field {
+/**
+ * Dataclass for a field.
+ */
+class Field {
     int size;
-    String type;
+    private String type;
     Field(int size, String type) {
         this.size = size;
         this.type = type;

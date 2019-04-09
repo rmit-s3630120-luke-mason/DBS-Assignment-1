@@ -4,6 +4,9 @@ class Schema {
     private static final int BYTES_IN_CHAR = 2;
 
 
+    /**
+     * The fields and their sizes for the csv data file to make into a heapfile.
+     */
     static final Field[] fields = new Field[]{
             new Field(30 * BYTES_IN_CHAR, "string"),
             new Field(4, "int"),
@@ -39,8 +42,9 @@ class Schema {
     }
 
     /**
+     * Gets the total record size by adding all the size together.
      *
-     * @return
+     * @return the record size.
      */
     static int getTotalRecordSize() {
         int count = 0;
@@ -53,8 +57,8 @@ class Schema {
     /**
      * returns the offset of the field in a record.
      *
-     * @param field
-     * @return
+     * @param field The field to get the offset for.
+     * @return  The offset of the field.
      */
     static int getOffset(FIELDS field) {
         int offset = 0;
