@@ -312,8 +312,8 @@ public class DataSplitter {
                         values[FIELDS.SIDE_OF_STREET.ordinal()] + "," +
                         values[FIELDS.STREET_NAME.ordinal()] + "\n";
 
-        if (!mappedValues.get(PARKING_BAY).contains(values[FIELDS.STREET_MARKER.ordinal()])) {
-            mappedValues.get(PARKING_BAY).add(values[FIELDS.STREET_MARKER.ordinal()]);
+        if (!mappedValues.get(PARKING_BAY).contains(values[FIELDS.DEVICE_ID.ordinal()])) {
+            mappedValues.get(PARKING_BAY).add(values[FIELDS.DEVICE_ID.ordinal()]);
             f2.write(parkingBayRecord);
         }
 
