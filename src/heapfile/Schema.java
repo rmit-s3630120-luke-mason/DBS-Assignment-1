@@ -47,6 +47,7 @@ class Schema {
         for (Field field : fields) {
             count += field.size;
         }
+        return count;
     }
 
     /**

@@ -1,5 +1,7 @@
 package ingestion;
 
+import java.util.Date;
+
 /**
  * Responsible for the ingestion of data into a derby or mongo database.
  */
@@ -18,8 +20,10 @@ public class Ingest {
             return;
         }
 
+
         try {
 
+            long start = new Date().getTime();
             // Run the ingest for derby
             if (args[0].equalsIgnoreCase(ConfigProvider.DERBY)) {
                 DerbyDB derby = new DerbyDB();
@@ -32,6 +36,8 @@ public class Ingest {
                 MongoDB mongo = new MongoDB();
                 mongo.ingest();
             }
+            long end = new Date().getTime();
+            System.out.println("Time taken to ingest: " + (end - start) + " ms");
         }
         catch (DatabaseException e) {
             System.out.println("ERROR: " + e);

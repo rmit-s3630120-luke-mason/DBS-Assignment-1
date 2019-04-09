@@ -28,7 +28,11 @@ public class DataSplitter {
         IN_VIOLATION
     }
 
-    private static Map<String, List<String>> mappedValues = new HashMap<>();
+    private static Set<String> parkingBayPKSet = new HashSet<>();
+    private static Set<String> parkingTimePKSet = new HashSet<>();
+    private static Set<String> streetPKSet = new HashSet<>();
+
+
     static final String STREET = "STREET";
     static final String PARKING_BAY = "PARKINGBAY";
     static final String PARKING_TIME = "PARKINGTIME";
@@ -91,12 +95,6 @@ public class DataSplitter {
         File f3 = new File(tables.getProperty(STREET));
         File f2 = new File(tables.getProperty(PARKING_BAY));
         File f1 = new File(tables.getProperty(PARKING_TIME));
-
-        // Adding the lists that will hold the primary keys for the ingested records.
-        // This is used to detect any duplicate primary keys in the records.
-        mappedValues.put(STREET, new ArrayList<>());
-        mappedValues.put(PARKING_BAY, new ArrayList<>());
-        mappedValues.put(PARKING_TIME, new ArrayList<>());
 
         // Creating file writers from the file objects to use to write to the created files.
         try {
@@ -301,7 +299,10 @@ public class DataSplitter {
                         values[FIELDS.DURATION_SECONDS.ordinal()] + "," +
                         values[FIELDS.IN_VIOLATION.ordinal()] + "\n";
 
-        f1.write(parkingTimeRecord);
+        if (!parkingTimePKSet.contains(values[FIELDS.DEVICE_ID.ordinal()] + "-" + arrivalTime)) {
+            parkingTimePKSet.add(values[FIELDS.DEVICE_ID.ordinal()] + "-" + arrivalTime);
+            f1.write(parkingTimeRecord);
+        }
 
 
         String parkingBayRecord =
@@ -312,8 +313,8 @@ public class DataSplitter {
                         values[FIELDS.SIDE_OF_STREET.ordinal()] + "," +
                         values[FIELDS.STREET_NAME.ordinal()] + "\n";
 
-        if (!mappedValues.get(PARKING_BAY).contains(values[FIELDS.DEVICE_ID.ordinal()])) {
-            mappedValues.get(PARKING_BAY).add(values[FIELDS.DEVICE_ID.ordinal()]);
+        if (!parkingBayPKSet.contains(values[FIELDS.DEVICE_ID.ordinal()])) {
+            parkingBayPKSet.add(values[FIELDS.DEVICE_ID.ordinal()]);
             f2.write(parkingBayRecord);
         }
 
@@ -323,8 +324,8 @@ public class DataSplitter {
                         values[FIELDS.BETWEEN_STREET_2.ordinal()] + "," +
                         values[FIELDS.AREA.ordinal()] + "\n";
 
-        if (!mappedValues.get(STREET).contains(values[FIELDS.STREET_NAME.ordinal()])) {
-            mappedValues.get(STREET).add(values[FIELDS.STREET_NAME.ordinal()]);
+        if (!streetPKSet.contains(values[FIELDS.STREET_NAME.ordinal()])) {
+            streetPKSet.add(values[FIELDS.STREET_NAME.ordinal()]);
             f3.write(streetRecord);
         }
     }
